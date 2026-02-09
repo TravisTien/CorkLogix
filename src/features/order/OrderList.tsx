@@ -11,7 +11,7 @@ export function OrderList({ onSelectOrder }: { onSelectOrder: (orderId: string) 
             case 'shipping': return <Badge variant="info">配送中</Badge>;
             case 'delivered': return <Badge variant="success">已送達</Badge>;
             case 'completed': return <Badge variant="default" className="bg-gray-100 text-gray-600">已完成</Badge>;
-            case 'cancelled': return <Badge variant="destructive">已取消</Badge>;
+            case 'cancelled': return <Badge variant="error">已取消</Badge>;
             default: return <Badge variant="default">未知 ({status})</Badge>;
         }
     };
