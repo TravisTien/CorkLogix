@@ -393,7 +393,7 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
                         <div>
                             <h3 className="font-bold text-gray-900">貨物已簽收</h3>
                             <p className="text-xs text-gray-500">
-                                {currentUser.customerType === 'monthly' ? '此訂單將列入本月結帳單' : '請盡速完成付款以結案'}
+                                {currentUser?.customerType === 'monthly' ? '此訂單將列入本月結帳單' : '請盡速完成付款以結案'}
                             </p>
                         </div>
                     </div>
@@ -406,7 +406,7 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
                     )}
 
                     {/* Single Customer: Virtual Account Flow */}
-                    {currentUser.customerType === 'single' && (
+                    {currentUser?.customerType === 'single' && (
                         <div className="space-y-4">
                             {!virtualAccount ? (
                                 <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">

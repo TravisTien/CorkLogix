@@ -75,7 +75,7 @@ export function CartList({ items, onUpdateQty, onRemove, onCheckout }: CartListP
                     </span>
                 </div>
 
-                {currentUser.customerType === 'monthly' && (
+                {currentUser?.customerType === 'monthly' && (
                     <div className="bg-primary-50 p-3 rounded-lg border border-primary-100 space-y-2">
                         <div className="flex items-center gap-2 text-primary-800 font-bold text-sm">
                             <Calendar className="w-4 h-4" />
@@ -100,7 +100,7 @@ export function CartList({ items, onUpdateQty, onRemove, onCheckout }: CartListP
                     className="w-full h-12 text-lg shadow-lg shadow-primary-900/20"
                     onClick={onCheckout}
                 >
-                    {currentUser.customerType === 'monthly' ? '確認下單 (月結)' : '前往結帳'}
+                    {currentUser?.customerType === 'monthly' ? '確認下單 (月結)' : '前往結帳'}
                     <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
             </div>

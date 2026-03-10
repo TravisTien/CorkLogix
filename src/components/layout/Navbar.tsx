@@ -9,6 +9,7 @@ interface NavbarProps {
     showBack?: boolean;
     title?: string;
     onTabChange?: (tab: string) => void;
+    isFullScreen?: boolean;
 }
 
 export function Navbar({ onBack, showBack = false, title, onTabChange }: NavbarProps) {

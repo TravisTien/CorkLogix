@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, CreditCard, Copy, CheckCircle2, X, AlertCircle, Calendar, FileText, Download, Upload, Info } from "lucide-react";
+import { ArrowLeft, CheckCircle2, X, AlertCircle, Calendar, FileText, Upload, Info } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useUser } from "@/context/UserContext";
-import { INITIAL_ORDERS } from "@/data/mockData";
+import { INITIAL_ORDERS, Order } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
 interface DuePaymentsProps {
@@ -16,7 +16,7 @@ export function DuePayments({ onBack }: DuePaymentsProps) {
     const { currentUser } = useUser();
 
     // 將訂單存於 local state，以模擬修改為「核款中」的狀態變更
-    const [orders, setOrders] = useState(INITIAL_ORDERS);
+    const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS as Order[]);
 
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState('2026-02');

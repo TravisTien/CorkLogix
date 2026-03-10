@@ -23,6 +23,24 @@ export interface User {
     availableCredit?: number; // 可用信用額度
 }
 
+export interface Order {
+    id: string;
+    date: string;
+    status: string;
+    total: number;
+    paymentStatus?: string;
+    modificationReason?: string;
+    items: {
+        productId: string;
+        qty: number;
+        price: number;
+        unit?: string;
+        unitType?: string;
+        bottlesPerCase?: number;
+        isGift?: boolean;
+    }[];
+}
+
 export const USERS: User[] = [
     {
         id: 'merchant_monthly',
