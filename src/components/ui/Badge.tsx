@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 interface BadgeProps {
     children: React.ReactNode;
-    variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'purple' | 'red';
+    variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'purple' | 'red' | 'paid' | 'pending' | 'overdue';
     className?: string;
 }
 
@@ -15,6 +15,9 @@ export function Badge({ children, variant = 'default', className }: BadgeProps) 
         info: 'bg-sky-100 text-sky-800',
         purple: 'bg-purple-100 text-purple-800',
         red: 'bg-red-100 text-red-800',
+        paid: 'bg-green-100 text-green-800',
+        pending: 'bg-amber-100 text-amber-800',
+        overdue: 'bg-red-100 text-red-800',
     };
 
     return (

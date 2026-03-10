@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Check, AlertCircle, Truck, Package, DollarSign, Pen, Camera, Eye } from "lucide-react";
+import { ArrowLeft, Check, AlertCircle, Truck, Package, DollarSign, Pen, FileText } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SignaturePad } from "@/components/ui/SignaturePad";
@@ -24,7 +24,9 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
 
     const [showSignaturePad, setShowSignaturePad] = useState(false);
     const [signature, setSignature] = useState<string | null>(null);
-    const [paymentProof, setPaymentProof] = useState<string | null>(null);
+    const [virtualAccount, setVirtualAccount] = useState<string | null>(null);
+    const [paymentDeadline, setPaymentDeadline] = useState<string | null>(null);
+    const [isPaymentCompleted, setIsPaymentCompleted] = useState(false);
 
     // Demo State: Modifications
     const [modifiedItems, setModifiedItems] = useState(initialOrder.items);
@@ -49,13 +51,21 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
         setStatus('delivered');
     };
 
-    const handlePaymentUpload = () => {
-        // Simulate file upload
-        const fakeProofUrl = 'https://placehold.co/400x600/e2e8f0/475569/png?text=Bank+Transfer+Receipt';
-        setPaymentProof(fakeProofUrl);
-        alert("憑證上傳成功！等待業務核帳。");
-        // Status stays 'delivered' until business confirms, or we could have a 'verifying' status.
-        // For simplicity, let's keep it 'delivered' but show "Pending Verification".
+    const handleGenerateVirtualAccount = () => {
+        // Generate random 16 digit ID
+        const randomAccount = Array.from({ length: 4 }, () => Math.floor(1000 + Math.random() * 9000)).join('-');
+        setVirtualAccount(randomAccount);
+
+        // Set deadline to 24 hours from now
+        const deadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        setPaymentDeadline(deadline.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }));
+    };
+
+    const handleSimulatePaymentReceived = () => {
+        setIsPaymentCompleted(true);
+        setTimeout(() => {
+            setStatus('completed');
+        }, 1500);
     };
 
     const handleBusinessConfirmPayment = () => {
@@ -108,13 +118,58 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
         const product = PRODUCTS.find(p => p.id === item.productId);
         if (!product) return null;
 
+        const isGift = item.isGift || item.price === 0;
+        const bottlesPerCase = item.bottlesPerCase || 1;
+        const totalBottles = item.unitType === 'case' ? item.qty * bottlesPerCase : item.qty;
+        const displayQty = item.unitType === 'case'
+            ? `${item.qty} 箱 / ${totalBottles} 瓶`
+            : `${item.qty} 瓶`;
+
         return (
-            <div className={cn("flex justify-between py-2 border-b border-gray-100 last:border-0", isOriginal && "opacity-50 line-through")}>
-                <div className="flex gap-2">
-                    <span className="text-gray-500 text-sm">x{item.qty}</span>
-                    <span className="text-gray-900 text-sm font-medium">{product.name}</span>
+            <div className={cn(
+                "flex gap-3 py-3 border-b border-gray-100 last:border-0 items-center",
+                isOriginal && "opacity-50 line-through",
+                isGift && "bg-gray-50/50 -mx-4 px-4"
+            )}>
+                {/* Product Image */}
+                <div className="w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-200">
+                    <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                    />
                 </div>
-                <span className="text-gray-900 font-medium text-sm">${(item.price * item.qty).toLocaleString()}</span>
+
+                {/* Product Info */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-1">
+                        <h4 className="text-sm font-bold text-gray-900 truncate">{product.name}</h4>
+                        {isGift && (
+                            <span className="bg-primary-100 text-primary-800 text-[10px] px-1.5 py-0.5 rounded font-bold">贈品</span>
+                        )}
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                        <div className="space-y-0.5">
+                            <p className="text-xs font-medium text-gray-600">
+                                {!isGift ? (
+                                    <>
+                                        批發價：${item.price.toLocaleString()}/{item.unitType === 'case' ? '箱' : '瓶'}
+                                        {" "}x {displayQty} =
+                                        <span className="text-gray-900 ml-1 font-bold">
+                                            ${(item.price * item.qty).toLocaleString()}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        贈品數量：{displayQty} =
+                                        <span className="text-primary-600 ml-1 font-bold">$0</span>
+                                    </>
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     };
@@ -140,6 +195,48 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
             {/* Progress */}
             {getStatusDisplay()}
 
+            {/* Order Basic Info */}
+            <Card className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                    <FileText className="w-5 h-5 text-gray-500" />
+                    <h3 className="font-bold text-gray-900">基本資訊</h3>
+                </div>
+                <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-gray-500">訂單編號</span>
+                        <span className="font-mono font-medium text-gray-900">{orderId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-500">下單時間</span>
+                        <span className="font-medium text-gray-900">{initialOrder.date.replace(/-/g, '/')} 14:00</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-500">付款狀態</span>
+                        {(() => {
+                            let label = "未付款";
+                            let colorClass = "bg-orange-50 text-orange-700 border-orange-100";
+
+                            if (currentUser?.customerType === 'monthly') {
+                                label = "月結 (帳期中)";
+                                colorClass = "bg-blue-50 text-blue-700 border-blue-100";
+                            } else if (status === 'completed') {
+                                label = "已付款";
+                                colorClass = "bg-green-50 text-green-700 border-green-100";
+                            } else if (isPaymentCompleted) {
+                                label = "核款中";
+                                colorClass = "bg-amber-50 text-amber-700 border-amber-100";
+                            }
+
+                            return (
+                                <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold border", colorClass)}>
+                                    {label}
+                                </span>
+                            );
+                        })()}
+                    </div>
+                </div>
+            </Card>
+
             {/* Changes Alert for Merchant */}
             {status === 'pending_confirm' && !isDriverMode && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3 text-amber-800">
@@ -163,6 +260,68 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
                 </div>
             )}
 
+            {/* Delivery Info */}
+            <Card className="p-4">
+                <div className="flex items-center gap-2 mb-4">
+                    <Truck className="w-5 h-5 text-gray-500" />
+                    <h3 className="font-bold text-gray-900">配送資訊</h3>
+                </div>
+
+                <div className="space-y-4">
+                    {/* Store & Contact */}
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">收貨資訊</p>
+                        <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">門市名稱</span>
+                                <span className="font-bold text-gray-900">{currentUser?.name || "Le Bistro Parisien"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">收件人</span>
+                                <span className="font-medium text-gray-900">Pierre Chef</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">聯絡電話</span>
+                                <span className="font-medium text-gray-900">0912-345-678</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="h-px bg-gray-50" />
+
+                    {/* Address */}
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">配送地址</p>
+                        <p className="text-sm font-medium text-gray-900 leading-relaxed">
+                            台北市信義區松仁路100號
+                        </p>
+                    </div>
+
+                    <div className="h-px bg-gray-50" />
+
+                    {/* Logistics Detail */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">配送方式</p>
+                            <p className="text-sm font-medium text-gray-900">公司車配送</p>
+                        </div>
+                        <div className="space-y-1.5">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">預計到貨</p>
+                            <p className="text-sm font-bold text-primary-700">2026/03/11</p>
+                        </div>
+                    </div>
+
+                    {/* Optional Tracking Code (e.g. for third party) */}
+                    <div className="mt-2 bg-gray-50 p-2 rounded border border-dashed border-gray-200">
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase">物流追蹤碼</span>
+                            <a href="#" className="text-[10px] font-bold text-primary-600 hover:underline">點此查詢物流狀態</a>
+                        </div>
+                        <p className="text-xs font-mono mt-1 text-gray-600">TW-EXP-1029384756</p>
+                    </div>
+                </div>
+            </Card>
+
             {/* Items List */}
             <Card className="p-4">
                 <h3 className="font-bold text-gray-900 mb-2">商品明細</h3>
@@ -175,11 +334,30 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
                     </div>
                 ))}
 
-                <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">總計金額</span>
-                    <span className="text-xl font-bold text-primary-800">
-                        ${modifiedItems.reduce((acc: number, item: any) => acc + (item.price * item.qty), 0).toLocaleString()}
-                    </span>
+                <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                    {(() => {
+                        const subtotal = modifiedItems.reduce((acc: number, item: any) => acc + (item.price * item.qty), 0);
+                        const tax = Math.round(subtotal * 0.05);
+                        const total = subtotal + tax;
+                        return (
+                            <>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-500">未稅價</span>
+                                    <span className="text-gray-900 font-medium text-base">${subtotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-500">營業稅 (5%)</span>
+                                    <span className="text-gray-900 font-medium text-base">${tax.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                                    <span className="text-gray-900 font-bold">含稅總計</span>
+                                    <span className="text-xl font-bold text-primary-800">
+                                        ${total.toLocaleString()}
+                                    </span>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
             </Card>
 
@@ -198,15 +376,6 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
             {/* 2. Shipping/Delivery (Driver) */}
             {status === 'shipping' && (
                 <div className="space-y-4">
-                    <Card className="p-4">
-                        <h3 className="font-bold mb-4">配送資訊</h3>
-                        <div className="space-y-2 text-sm">
-                            <div className="flex justify-between"><span className="text-gray-500">收件人</span><span>Pierre Chef</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">電話</span><span>0912-345-678</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">地址</span><span>台北市信義區松仁路100號</span></div>
-                        </div>
-                    </Card>
-
                     <Button className="w-full h-12 text-lg gap-2" onClick={() => setShowSignaturePad(true)}>
                         <Pen className="w-5 h-5" />
                         簽收確認 (貨物紀錄)
@@ -236,42 +405,74 @@ export function OrderDetail({ orderId, onBack }: { orderId: string, onBack: () =
                         </div>
                     )}
 
-                    {/* Single Customer: Payment Info & Upload */}
+                    {/* Single Customer: Virtual Account Flow */}
                     {currentUser.customerType === 'single' && (
-                        <>
-                            <div className="bg-gray-100 rounded-lg p-3 text-sm space-y-1">
-                                <p className="font-bold text-gray-700">匯款帳號 (玉山 808)</p>
-                                <p className="font-mono text-lg text-gray-900">1234-5678-9012-3456</p>
-                            </div>
-
-                            {paymentProof ? (
-                                <div className="bg-green-50 p-3 rounded border border-green-200 text-center">
-                                    <p className="text-sm font-bold text-green-800 flex items-center justify-center gap-2">
-                                        <Check className="w-4 h-4" /> 憑證已上傳
-                                    </p>
-                                    <p className="text-xs text-green-600 mt-1">等待業務核對中</p>
-                                    <Button size="sm" variant="ghost" className="mt-2 text-xs text-green-700 underline" onClick={() => window.open(paymentProof, '_blank')}>
-                                        查看憑證
+                        <div className="space-y-4">
+                            {!virtualAccount ? (
+                                <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+                                    <h4 className="font-bold text-gray-900 mb-2">待支付款項</h4>
+                                    <p className="text-sm text-gray-500 mb-4">請點擊下方按鈕取得專屬匯款帳號</p>
+                                    <Button className="w-full max-w-xs mx-auto" onClick={handleGenerateVirtualAccount}>
+                                        <DollarSign className="w-4 h-4 mr-2" />
+                                        取得匯款帳號 (前往付款)
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors" onClick={handlePaymentUpload}>
-                                    <Camera className="w-8 h-8 text-gray-400" />
-                                    <span className="text-sm text-gray-500">點擊上傳匯款憑證/收據</span>
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 space-y-3 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                                            <DollarSign className="w-24 h-24 text-primary-900" />
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs font-bold text-primary-800 uppercase tracking-wider mb-1">ATM 虛擬轉帳帳號</p>
+                                            <p className="text-2xl font-mono font-bold text-primary-900 tracking-wider select-all">
+                                                {virtualAccount}
+                                            </p>
+                                            <p className="text-[10px] text-primary-600 mt-1">銀行代碼: 808 (玉山銀行)</p>
+                                        </div>
+
+                                        <div className="pt-3 border-t border-primary-100 flex items-start gap-2">
+                                            <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-xs font-bold text-orange-700">付款期限：{paymentDeadline}</p>
+                                                <p className="text-[10px] text-orange-600/80">請務必於期限內完成轉帳，逾期帳號將失效。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Simulation Button */}
+                                    <div className="pt-2">
+                                        <Button
+                                            variant={isPaymentCompleted ? "secondary" : "primary"}
+                                            className={cn("w-full transition-all", isPaymentCompleted ? "bg-green-100 text-green-700 border-green-200" : "")}
+                                            onClick={handleSimulatePaymentReceived}
+                                            disabled={isPaymentCompleted}
+                                        >
+                                            {isPaymentCompleted ? (
+                                                <>
+                                                    <Check className="w-4 h-4 mr-2" />
+                                                    已模擬付款 (系統入帳中...)
+                                                </>
+                                            ) : (
+                                                "模擬：消費者已匯款 (系統自動對帳)"
+                                            )}
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
-                        </>
+                        </div>
                     )}
 
                     {/* Business/Admin: Approve Payment */}
-                    {isBusinessConfig && currentUser.customerType !== 'monthly' && (
-                        <div className="border-t border-gray-100 pt-4 mt-2">
+                    {isBusinessConfig && currentUser?.customerType !== 'monthly' && (
+                        <div className="border-t border-gray-100 pt-4 mt-2 px-4 pb-4">
                             <p className="text-xs font-bold text-gray-500 mb-2">[業務核帳]</p>
-                            {paymentProof ? (
+                            {isPaymentCompleted ? (
                                 <div className="space-y-2">
                                     <div className="bg-gray-100 p-2 rounded flex items-center gap-2">
-                                        <Eye className="w-4 h-4 text-gray-500" />
-                                        <span className="text-xs text-gray-600">商家已上傳憑證</span>
+                                        <DollarSign className="w-4 h-4 text-green-600" />
+                                        <span className="text-xs text-gray-600">系統已收到款項</span>
                                     </div>
                                     <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleBusinessConfirmPayment}>
                                         <Check className="w-4 h-4 mr-2" />

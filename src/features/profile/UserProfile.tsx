@@ -1,11 +1,11 @@
 import { useUser } from "@/context/UserContext";
-import { USERS } from "@/data/mockData";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { UserCircle, RefreshCcw } from "lucide-react";
+import { UserCircle } from "lucide-react";
 
 export function UserProfile() {
-    const { currentUser, switchUser } = useUser();
+    const { currentUser } = useUser();
+
+    if (!currentUser) return null;
 
     return (
         <div className="p-4 space-y-6">
@@ -29,32 +29,6 @@ export function UserProfile() {
                     </div>
                 </div>
             </Card>
-
-            <div className="space-y-4">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                    <RefreshCcw className="w-4 h-4" />
-                    切換身份 (模擬測試用)
-                </h3>
-                <div className="grid gap-3">
-                    {USERS.map(user => (
-                        <Button
-                            key={user.id}
-                            variant={currentUser.id === user.id ? "primary" : "secondary"}
-                            className="justify-start h-auto py-3 px-4"
-                            onClick={() => switchUser(user.id)}
-                        >
-                            <div className="text-left">
-                                <div className="font-bold">{user.name}</div>
-                                <div className="text-xs opacity-70">
-                                    {user.role === 'merchant'
-                                        ? (user.customerType === 'monthly' ? '月結模式' : '單次匯款模式')
-                                        : '業務/管理員模式'}
-                                </div>
-                            </div>
-                        </Button>
-                    ))}
-                </div>
-            </div>
         </div>
     );
 }

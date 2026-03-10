@@ -1,4 +1,4 @@
-import { Home, ListOrdered, User, ShoppingCart } from "lucide-react";
+import { Home, ListOrdered, ShoppingCart, Headset } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BottomNavProps {
@@ -10,8 +10,8 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     const items = [
         { id: 'home', icon: Home, label: '首頁' },
         { id: 'cart', icon: ShoppingCart, label: '採購車' },
-        { id: 'orders', icon: ListOrdered, label: '訂單' },
-        { id: 'profile', icon: User, label: '帳號' },
+        { id: 'orders', icon: ListOrdered, label: '訂單管理' },
+        { id: 'contact', icon: Headset, label: '聯繫專員' },
     ];
 
     return (

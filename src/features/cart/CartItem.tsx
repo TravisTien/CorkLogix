@@ -58,8 +58,8 @@ export function CartItem({ productId, qty, unit, price, onUpdateQty, onRemove }:
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6 rounded-md bg-white shadow-sm"
-                            onClick={() => onUpdateQty(productId, Math.max(1, qty - 1))}
-                            disabled={qty <= 1}
+                            onClick={() => onUpdateQty(productId, qty - 1)}
+                            disabled={qty <= 0}
                         >
                             <Minus className="h-3 w-3" />
                         </Button>
